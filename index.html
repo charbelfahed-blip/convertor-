@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Student Unit Converter — Science & Math</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#ffffff; --ink:#172033; --muted:#667085;
+      --line:#d9e0ea; --accent:#3157d5; --accent2:#eef2ff;
+      --good:#0f8a5f; --warn:#b45309; --shadow:0 12px 28px rgba(20,30,55,.09);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    .wrap{max-width:920px;margin:auto;padding:18px}
+    header{padding:16px 2px 8px}
+    h1{font-size:clamp(26px,5vw,40px);margin:0 0 6px}
+    .sub{color:var(--muted);margin:0}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin:16px 0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    button,.tab,select,input{font:inherit}
+    .tab{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:999px;cursor:pointer}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .panel{display:none}.panel.active{display:block}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:680px){.grid{grid-template-columns:1fr}}
+    label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
+    select,input{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+    input[type="number"]{font-size:20px;font-weight:700}
+    .result{margin-top:16px;background:var(--accent2);border:1px solid #cbd5ff;border-radius:16px;padding:16px}
+    .big{font-size:clamp(26px,5vw,42px);font-weight:800;word-break:break-word}
+    .eq{margin-top:8px;color:#334155;line-height:1.55}
+    .mini{font-size:13px;color:var(--muted)}
+    .swap{margin-top:10px;border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}
+    th{font-size:13px;color:var(--muted)}
+    .pow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800}
+    .chip{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2f7;margin:3px;font-size:13px}
+    .formula{background:#0f172a;color:#fff;padding:12px 14px;border-radius:14px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .note{padding:12px;border-left:4px solid var(--good);background:#eefbf6;border-radius:10px;margin-top:12px}
+    .warn{border-left-color:var(--warn);background:#fff7ed}
+    .footer{color:var(--muted);font-size:12px;text-align:center;padding:18px}
+    sup{font-size:.65em}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Student Unit Converter</h1>
+    <p class="sub">Science + Math • same-family conversions • metric prefixes • powers of 10 • exponents</p>
+    <div class="tabs">
+      <button class="tab active" data-tab="converter">Converter</button>
+      <button class="tab" data-tab="prefixes">Prefix Ladder</button>
+      <button class="tab" data-tab="powers">Area & Volume Exponents</button>
+      <button class="tab" data-tab="notation">Scientific Notation</button>
+    </div>
+  </header>
+
+  <section id="converter" class="panel active card">
+    <h2>Convert units</h2>
+    <p class="mini">Convert between any units in the same family — for example <b>mm → dm</b>, <b>dm → mm</b>, <b>mL → L</b>, or <b>mg → kg</b>.</p>
+    <div class="grid">
+      <div>
+        <label for="kind">Measurement</label>
+        <select id="kind"></select>
+      </div>
+      <div>
+        <label for="value">Value</label>
+        <input id="value" type="number" step="any" value="1" />
+      </div>
+      <div>
+        <label for="from">From</label>
+        <select id="from"></select>
+      </div>
+      <div>
+        <label for="to">To</label>
+        <select id="to"></select>
+      </div>
+    </div>
+    <button class="swap" id="swap">⇄ Swap units</button>
+
+    <div style="margin-top:14px">
+      <div class="mini"><b>Quick examples</b></div>
+      <button class="tab quick" data-kind="length" data-from="4" data-to="2" data-value="100">100 mm → dm</button>
+      <button class="tab quick" data-kind="length" data-from="2" data-to="4" data-value="1">1 dm → mm</button>
+      <button class="tab quick" data-kind="liquid" data-from="4" data-to="1" data-value="750">750 mL → L</button>
+      <button class="tab quick" data-kind="mass" data-from="2" data-to="0" data-value="2500">2500 mg → kg</button>
+    </div>
+
+    <div class="result">
+      <div class="mini">Answer</div>
+      <div class="big" id="answer">—</div>
+      <div class="eq" id="steps"></div>
+    </div>
+  </section>
+
+  <section id="prefixes" class="panel card">
+    <h2>Metric prefix ladder</h2>
+    <p>Each step changes the value by a power of 10.</p>
+    <table>
+      <thead><tr><th>Prefix</th><th>Symbol</th><th>Power of 10</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>tera</td><td>T</td><td class="pow">10<sup>12</sup></td><td>1 Tm = 10<sup>12</sup> m</td></tr>
+        <tr><td>giga</td><td>G</td><td class="pow">10<sup>9</sup></td><td>1 Gm = 10<sup>9</sup> m</td></tr>
+        <tr><td>mega</td><td>M</td><td class="pow">10<sup>6</sup></td><td>1 Mm = 10<sup>6</sup> m</td></tr>
+        <tr><td>kilo</td><td>k</td><td class="pow">10<sup>3</sup></td><td>1 km = 10<sup>3</sup> m</td></tr>
+        <tr><td>hecto</td><td>h</td><td class="pow">10<sup>2</sup></td><td>1 hm = 10<sup>2</sup> m</td></tr>
+        <tr><td>deca</td><td>da</td><td class="pow">10<sup>1</sup></td><td>1 dam = 10<sup>1</sup> m</td></tr>
+        <tr><td>base unit</td><td>—</td><td class="pow">10<sup>0</sup></td><td>m, g, L</td></tr>
+        <tr><td>deci</td><td>d</td><td class="pow">10<sup>−1</sup></td><td>1 dm = 10<sup>−1</sup> m</td></tr>
+        <tr><td>centi</td><td>c</td><td class="pow">10<sup>−2</sup></td><td>1 cm = 10<sup>−2</sup> m</td></tr>
+        <tr><td>milli</td><td>m</td><td class="pow">10<sup>−3</sup></td><td>1 mm = 10<sup>−3</sup> m</td></tr>
+        <tr><td>micro</td><td>µ</td><td class="pow">10<sup>−6</sup></td><td>1 µm = 10<sup>−6</sup> m</td></tr>
+        <tr><td>nano</td><td>n</td><td class="pow">10<sup>−9</sup></td><td>1 nm = 10<sup>−9</sup> m</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>Student trick:</b> converting from exponent <i>a</i> to exponent <i>b</i> multiplies by 10<sup>a−b</sup>.</div>
+    <div class="note">
+      <b>Example: 100 mm → dm</b><br>
+      mm = 10<sup>−3</sup> m and dm = 10<sup>−1</sup> m.<br>
+      Exponent difference: −3 − (−1) = −2.<br>
+      100 × 10<sup>−2</sup> = <b>1 dm</b>.
+    </div>
+  </section>
+
+  <section id="powers" class="panel card">
+    <h2>Why area and volume change the exponent</h2>
+    <p>For length, the prefix exponent is used once. For area it is used twice. For volume it is used three times.</p>
+    <div class="formula">
+      1 cm = 10⁻² m<br>
+      1 cm² = (10⁻²)² m² = 10⁻⁴ m²<br>
+      1 cm³ = (10⁻²)³ m³ = 10⁻⁶ m³
+    </div>
+    <table>
+      <thead><tr><th>Quantity</th><th>Example</th><th>Power rule</th></tr></thead>
+      <tbody>
+        <tr><td>Length</td><td>cm → m</td><td>10<sup>−2</sup></td></tr>
+        <tr><td>Area</td><td>cm² → m²</td><td>10<sup>−4</sup></td></tr>
+        <tr><td>Volume</td><td>cm³ → m³</td><td>10<sup>−6</sup></td></tr>
+      </tbody>
+    </table>
+    <div class="note warn"><b>Common mistake:</b> 1 m² is not 100 cm². It is 10,000 cm² = 10<sup>4</sup> cm².</div>
+  </section>
+
+  <section id="notation" class="panel card">
+    <h2>Scientific notation helper</h2>
+    <div class="grid">
+      <div>
+        <label for="sciValue">Number</label>
+        <input id="sciValue" type="number" step="any" value="0.00045" />
+      </div>
+      <div>
+        <label>Scientific notation</label>
+        <div class="result" style="margin-top:0">
+          <div class="big" id="sciAnswer">—</div>
+        </div>
+      </div>
+    </div>
+    <p class="mini">Move the decimal so the first number is between 1 and 10. The number of moves becomes the exponent.</p>
+  </section>
+
+  <div class="footer">Built for student practice • Works offline once loaded</div>
+</div>
+
+<script>
+const groups = {
+  length: {
+    label:"Length",
+    dimension:1,
+    units:[
+      ["km","kilometre",3],["m","metre",0],["dm","decimetre",-1],
+      ["cm","centimetre",-2],["mm","millimetre",-3],
+      ["µm","micrometre",-6],["nm","nanometre",-9]
+    ]
+  },
+  area: {
+    label:"Area",
+    dimension:2,
+    units:[
+      ["km²","square kilometre",3],["m²","square metre",0],
+      ["dm²","square decimetre",-1],["cm²","square centimetre",-2],
+      ["mm²","square millimetre",-3]
+    ]
+  },
+  volume: {
+    label:"Cubic volume",
+    dimension:3,
+    units:[
+      ["m³","cubic metre",0],["dm³","cubic decimetre",-1],
+      ["cm³","cubic centimetre",-2],["mm³","cubic millimetre",-3]
+    ]
+  },
+  liquid: {
+    label:"Liquid volume",
+    dimension:1,
+    units:[
+      ["kL","kilolitre",3],["L","litre",0],["dL","decilitre",-1],
+      ["cL","centilitre",-2],["mL","millilitre",-3],["µL","microlitre",-6]
+    ]
+  },
+  mass: {
+    label:"Mass",
+    dimension:1,
+    units:[
+      ["kg","kilogram",3],["g","gram",0],["mg","milligram",-3],
+      ["µg","microgram",-6],["ng","nanogram",-9]
+    ]
+  }
+};
+
+const kind = document.querySelector("#kind");
+const value = document.querySelector("#value");
+const from = document.querySelector("#from");
+const to = document.querySelector("#to");
+const answer = document.querySelector("#answer");
+const steps = document.querySelector("#steps");
+
+Object.entries(groups).forEach(([key,g])=>{
+  const o=document.createElement("option"); o.value=key; o.textContent=g.label; kind.appendChild(o);
+});
+
+function superscript(n){
+  const map={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+  return String(n).split("").map(c=>map[c]||c).join("");
+}
+function fmt(n){
+  if(!Number.isFinite(n)) return "—";
+  const a=Math.abs(n);
+  if((a!==0 && a<0.000001)||a>=1000000000) return n.toExponential(6).replace(/\.?0+e/,"e");
+  return Number(n.toPrecision(12)).toLocaleString(undefined,{maximumFractionDigits:12});
+}
+function loadUnits(){
+  const g=groups[kind.value];
+  from.innerHTML=""; to.innerHTML="";
+  g.units.forEach(([sym,name,exp],i)=>{
+    const text=`${sym} — ${name} (10${superscript(exp)})`;
+    const a=new Option(text,i), b=new Option(text,i);
+    from.add(a); to.add(b);
+  });
+  from.selectedIndex=0;
+  to.selectedIndex=Math.min(1,g.units.length-1);
+  convert();
+}
+function convert(){
+  const g=groups[kind.value];
+  const v=parseFloat(value.value);
+  const u1=g.units[from.selectedIndex], u2=g.units[to.selectedIndex];
+  if(!Number.isFinite(v)){answer.textContent="Enter a number";steps.textContent="";return;}
+  const exp1=u1[2]*g.dimension;
+  const exp2=u2[2]*g.dimension;
+  const delta=exp1-exp2;
+  const out=v*Math.pow(10,delta);
+  answer.innerHTML=`${fmt(out)} ${u2[0]}`;
+  steps.innerHTML=
+    `${u1[0]} = 10<sup>${exp1}</sup> base units<br>`+
+    `${u2[0]} = 10<sup>${exp2}</sup> base units<br>`+
+    `Exponent difference: ${exp1} − (${exp2}) = <b>${delta}</b><br>`+
+    `${fmt(v)} × 10<sup>${delta}</sup> = <b>${fmt(out)} ${u2[0]}</b>`;
+}
+kind.addEventListener("change",loadUnits);
+[value,from,to].forEach(el=>el.addEventListener("input",convert));
+document.querySelector("#swap").addEventListener("click",()=>{
+  const a=from.selectedIndex; from.selectedIndex=to.selectedIndex; to.selectedIndex=a; convert();
+});
+
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+
+document.querySelectorAll(".quick").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    kind.value = btn.dataset.kind;
+    loadUnits();
+    from.selectedIndex = Number(btn.dataset.from);
+    to.selectedIndex = Number(btn.dataset.to);
+    value.value = btn.dataset.value;
+    convert();
+  });
+});
+
+const sciValue=document.querySelector("#sciValue");
+const sciAnswer=document.querySelector("#sciAnswer");
+function sci(){
+  const n=parseFloat(sciValue.value);
+  if(!Number.isFinite(n)){sciAnswer.textContent="—";return;}
+  if(n===0){sciAnswer.textContent="0";return;}
+  const e=Math.floor(Math.log10(Math.abs(n)));
+  const c=n/Math.pow(10,e);
+  sciAnswer.textContent=`${Number(c.toPrecision(8))} × 10${superscript(e)}`;
+}
+sciValue.addEventListener("input",sci);
+
+loadUnits();
+sci();
+</script>
+</body>
+</html>
